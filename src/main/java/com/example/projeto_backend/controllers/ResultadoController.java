@@ -24,17 +24,17 @@ import com.example.projeto_backend.utils.Cenarios;
 public class ResultadoController {
 
     @Autowired
-    private CacheService cacheService;  // Injetando o serviço CacheService
+    private CacheService cacheService;
 
     @PostMapping("/limparCache")
     public String limparCache() {
-        cacheService.clearFirstLevelCache();  // Chamando o método para limpar o cache
+        cacheService.clearFirstLevelCache();  
         return "Cache de primeiro nível limpo!";
     }
 
     @PostMapping("/limparCache2")
     public String limparCache2() {
-        cacheService.clearSecondLevelCache();  // Chamando o método para limpar o cache
+        cacheService.clearSecondLevelCache();  
         return "Cache de segundo nível limpo!";
     }
 
@@ -51,19 +51,18 @@ public class ResultadoController {
         return service.listarPorAlgoritmo(algoritmo);
     }
 
-    // Método para realizar o teste para BubbleSort
     @PostMapping("/bubbleSort")
     public void realizarTesteBubbleSort() {
-        int[] tamanhos = {10000, 100000, 500000};  // Tamanhos de amostra
+        int[] tamanhos = {10000, 100000, 500000}; 
         String[] cenarios = {"Crescente", "Decrescente", "Aleatorio", "StringsAleatorias"};
 
         for (int tamanho : tamanhos) {
             for (String cenario : cenarios) {
                 System.out.println("Testando Bubble Sort com " + tamanho + " elementos no cenário: " + cenario);
 
-                Object array = gerarVetor(tamanho, cenario);  // Usando Object para acomodar tanto int[] quanto String[]
+                Object array = gerarVetor(tamanho, cenario);
 
-                long tempoBubbleSort = 0; // Inicializa a variável de tempo
+                long tempoBubbleSort = 0;
 
                 // Verificar o tipo de array e usar o algoritmo adequado
                 if (array instanceof int[]) {
@@ -81,7 +80,6 @@ public class ResultadoController {
         }
     }
 
-    // Método para realizar o teste para MergeSort
     @PostMapping("/mergeSort")
     public void realizarTesteMergeSort() {
         int[] tamanhos = {10000, 100000, 500000};  // Tamanhos de amostra
@@ -111,7 +109,6 @@ public class ResultadoController {
         }
     }
 
-    // Método para realizar o teste para QuickSort
     @PostMapping("/quickSort")
     public void realizarTesteQuickSort() {
         int[] tamanhos = {10000, 100000, 500000};
@@ -119,18 +116,25 @@ public class ResultadoController {
     
         System.out.println("Iniciando testes de Quick Sort...");
     
-        long totalStartTime = System.nanoTime();
-    
         for (int tamanho : tamanhos) {
             for (String cenario : cenarios) {
                 try {
-                    System.out.println("Testando Quick Sort com " + tamanho + " elementos no cenário: " + cenario);
+                    System.out.println("\nTestando Quick Sort com " + tamanho + " elementos no cenário: " + cenario);
     
+                    // Log de memória antes
+                    logMemoria("Antes de gerar o vetor");
+    
+                    // Gera o vetor
                     Object array = gerarVetor(tamanho, cenario);
+                    if (array == null) {
+                        throw new IllegalArgumentException("Erro: O vetor gerado para " + cenario + " com tamanho " + tamanho + " é nulo.");
+                    }
+    
                     System.out.println("Vetor gerado para " + cenario + ": " + array.getClass().getSimpleName());
     
                     long tempoQuickSort = 0;
     
+                    // Verifica o tipo do vetor e executa o Quick Sort ou Arrays.sort
                     if (array instanceof int[]) {
                         tempoQuickSort = medirTempoExecucao(() -> QuickSort.sort((int[]) array), tamanho);
                     } else if (array instanceof String[]) {
@@ -139,28 +143,41 @@ public class ResultadoController {
     
                     System.out.println("Quick Sort levou " + tempoQuickSort + " microsegundos");
     
+                    // Cria o resultado e salva no banco
                     Resultado resultado = new Resultado("Quick Sort", tempoQuickSort, tamanho, cenario);
-                    System.out.println("Tentando salvar no banco: " + resultado);
-    
                     service.salvar(resultado);
                     System.out.println("Resultado salvo com sucesso: " + resultado);
     
+                    // Log de memória após salvar
+                    logMemoria("Após salvar no banco");
+    
+                } catch (OutOfMemoryError e) {
+                    System.err.println("Erro de memória ao processar " + cenario + " com tamanho " + tamanho);
+                    e.printStackTrace();
                 } catch (Exception e) {
-                    System.err.println("Erro ao executar Quick Sort para " + cenario + " com tamanho " + tamanho);
+                    System.err.println("Erro inesperado ao processar " + cenario + " com tamanho " + tamanho);
                     e.printStackTrace();
                 }
             }
         }
-    
-        long totalEndTime = System.nanoTime();
-        System.out.println("Tempo total de execução dos testes de Quick Sort: " + (totalEndTime - totalStartTime) / 1000000 + " ms");
+        System.out.println("Todos os testes de Quick Sort concluídos.");
     }
     
-
-    // Método para realizar o teste para ShellSort
+    // Método para medir a memória disponível
+    private void logMemoria(String mensagem) {
+        Runtime runtime = Runtime.getRuntime();
+        long memoriaLivre = runtime.freeMemory() / (1024 * 1024);
+        long memoriaTotal = runtime.totalMemory() / (1024 * 1024);
+        long memoriaUsada = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
+    
+        System.out.println("[" + mensagem + "] Memória usada: " + memoriaUsada + " MB, Memória livre: " + memoriaLivre + " MB, Memória total: " + memoriaTotal + " MB");
+    }
+    
+    
+    
     @PostMapping("/shellSort")
     public void realizarTesteShellSort() {
-        int[] tamanhos = {10000, 100000, 500000};  // Tamanhos de amostra
+        int[] tamanhos = {10000, 100000, 500000};
         String[] cenarios = {"Crescente", "Decrescente", "Aleatorio", "StringsAleatorias"};
 
         for (int tamanho : tamanhos) {
@@ -214,6 +231,6 @@ public class ResultadoController {
         long startTime = System.nanoTime();
         algoritmo.run();
         long endTime = System.nanoTime();
-        return (endTime - startTime) / 1000;  // Converte de nanosegundos para microsegundos
+        return (endTime - startTime) / 1000000;  // Converte de nanosegundos para milissegundos
     }
 }
