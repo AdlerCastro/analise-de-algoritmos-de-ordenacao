@@ -16,7 +16,7 @@ public class Resultado {
 
     private String algoritmo;
 
-    @Column(name = "tempo_execucao_milissegundos", nullable = false)
+    @Column(name = "tempo_execucao_microssegundos", nullable = false)
     private Long tempoExecucao;
     
     private Integer tamanhoAmostra;

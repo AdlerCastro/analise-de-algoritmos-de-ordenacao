@@ -231,6 +231,6 @@ public class ResultadoController {
         long startTime = System.nanoTime();
         algoritmo.run();
         long endTime = System.nanoTime();
-        return (endTime - startTime) / 1000000;  // Converte de nanosegundos para milissegundos
+        return (endTime - startTime) / 1000;  // Converte de nanosegundos para microssegundos
     }
 }
